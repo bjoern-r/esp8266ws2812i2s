@@ -18,7 +18,9 @@ SRCS:=driver/uart.c \
 GCC_FOLDER:=~/esp8266/esp-open-sdk/xtensa-lx106-elf
 ESPTOOL_PY:=~/esp8266/esptool/esptool.py
 SDK:=/home/cnlohr/esp8266/esp_iot_sdk_v1.5.1
+SDK:=/Users/bjoern/esp8266/esp-open-sdk/sdk
 PORT:=/dev/ttyUSB0
+PORT:=/dev/tty.wchusbserialfd120
 #PORT:=/dev/ttyACM0
 
 XTLIB:=$(SDK)/lib
@@ -70,9 +72,9 @@ $(FW_FILES): $(TARGET_OUT)
 	PATH=$(FOLDERPREFIX):$$PATH;$(ESPTOOL_PY) elf2image $(TARGET_OUT)
 
 burn : $(FW_FILES)
-	stty -F $(PORT) 115200 -echo raw
+#	stty -F $(PORT) 115200 -echo raw
 	sleep .1
-	(/bin/echo -ne "\xc2\x42\x56\xff\x00" > $(PORT))||(	true)
+	#(/bin/echo -ne "\xc2\x42\x56\xff\x00" > $(PORT))||(	true)
 	($(ESPTOOL_PY) --port $(PORT) write_flash 0x00000 image.elf-0x00000.bin 0x40000 image.elf-0x40000.bin)||(true)
 
 #If you have space, MFS should live at 0x100000, if you don't it can also live at
