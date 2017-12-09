@@ -11,6 +11,10 @@
 #include <string.h>
 #include "md5.h"
 
+#ifndef MSG_NOSIGNAL
+	#define MSG_NOSIGNAL 0
+#endif
+
 #define BLOCK_SIZE 65536
 #define SECTOR_SIZE 4096
 #define PADDING 1024
