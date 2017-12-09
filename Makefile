@@ -4,6 +4,7 @@ all : $(TARGET_OUT) $(FW_FILES)
 
 
 SRCS:=driver/uart.c \
+	driver/spi.c \
 	common/mystuff.c \
 	common/flash_rewriter.c \
 	common/http.c \
@@ -13,6 +14,7 @@ SRCS:=driver/uart.c \
 	common/mfs.c \
 	user/custom_commands.c \
 	user/ws2812_i2s.c \
+	user/ws2812_spi.c \
 	user/user_main.c 
 
 GCC_FOLDER:=~/esp8266/esp-open-sdk/xtensa-lx106-elf

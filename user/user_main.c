@@ -9,15 +9,19 @@
 #include "espconn.h"
 #include "mystuff.h"
 #include "ws2812_i2s.h"
+#include "ws2812_spi.h"
 #include "commonservices.h"
 #include <mdns.h>
 
 #define PORT 7777
 
+#define USE_SPI
+//#define USE_I2S
+
 #define procTaskPrio        0
 #define procTaskQueueLen    1
 
-static volatile os_timer_t some_timer;
+static volatile os_timer_t some_timer, redraw_timer;
 static struct espconn *pUdpServer;
 uint8_t last_leds[512*3];
 int last_led_count;
@@ -54,6 +58,12 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 	CSTick( 1 );
 }
 
+static void ICACHE_FLASH_ATTR redrawTimer(void *arg)
+{
+#if defined(USE_SPI)
+	ws2812spi_push( last_leds, last_led_count*3 );
+#endif
+}
 
 //Called when new packet comes in.
 static void ICACHE_FLASH_ATTR
@@ -62,9 +72,12 @@ udpserver_recv(void *arg, char *pusrdata, unsigned short len)
 	struct espconn *pespconn = (struct espconn *)arg;
 
 	uart0_sendStr("X");
-
+#if defined(USE_SPI)
+	//ws2812spi_push( pusrdata+3, len-3 );
+#endif
+#if defined(USE_I2S)
 	ws2812_push( pusrdata+3, len-3 );
-
+#endif
 	len -= 3;
 	if( len > sizeof(last_leds) + 3 )
 	{
@@ -120,12 +133,24 @@ void user_init(void)
 	os_timer_disarm(&some_timer);
 	os_timer_setfn(&some_timer, (os_timer_func_t *)myTimer, NULL);
 	os_timer_arm(&some_timer, 100, 1);
-
-	ws2812_init();
-
+	
+	os_timer_disarm(&redraw_timer);
+	os_timer_setfn(&redraw_timer, (os_timer_func_t *)redrawTimer, NULL);
+	os_timer_arm(&redraw_timer, 30, 1); //30ms
+	
+	
 	uint8_t ledout[] = { 0x10, 0x10, 0x10 };
+	
+#if defined(USE_SPI)
+	ws2812spi_init();
+	ws2812spi_push(ledout, sizeof( ledout ));
+#endif
+#if defined(USE_I2S)
+	ws2812_init();
 	ws2812_push( ledout, sizeof( ledout ) );
-
+#endif
+	
+	
 	printf( "Boot Ok.\n" );
 
 	system_os_post(procTaskPrio, 0, 0 );
@@ -140,5 +165,4 @@ void EnterCritical()
 void ExitCritical()
 {
 }
-
 
